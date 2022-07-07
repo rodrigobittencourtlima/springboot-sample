@@ -2,7 +2,7 @@ package com.bittsoftware.dscatalog.resources;
 
 import java.util.List;
 
-import com.bittsoftware.dscatalog.entities.Category;
+import com.bittsoftware.dscatalog.dto.CategoryDTO;
 import com.bittsoftware.dscatalog.services.CategoryService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class CategoryResource {
 	private CategoryService service;
 
 	@GetMapping
-	public ResponseEntity<List<Category>> findAll() {
+	public ResponseEntity<List<CategoryDTO>> findAll() {
 		return ResponseEntity.ok().body(service.findAll());
 	}
 
