@@ -1,5 +1,8 @@
 package com.bittsoftware.dscatalog.repositories;
 
+import com.bittsoftware.dscatalog.entities.Product;
+import com.bittsoftware.dscatalog.tests.Factory;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +17,23 @@ public class ProductRepositoryTests {
 	private ProductRepository repository;
 	private Long existingId;
 	private Long nonExistingId;
-	
+	private Long countTotalProducts;
+
 	@BeforeEach
-	void setUp() throws Exception{
+	void setUp() throws Exception {
 		existingId = 1L;
 		nonExistingId = 100L;
+		countTotalProducts = 25L;
+	}
+
+	@Test
+	public void saveShouldPersistWithAutoIncrementWhenIdIsNull() {
+		Product product = Factory.createProduct();
+		product.setId(null);
+
+		product = repository.save(product);
+
+		Assertions.assertEquals(countTotalProducts + 1, product.getId());
 	}
 
 	@Test
@@ -26,7 +41,7 @@ public class ProductRepositoryTests {
 		repository.deleteById(existingId);
 		Assertions.assertFalse(repository.findById(1L).isPresent());
 	}
-	
+
 	@Test
 	public void deleteShouldThrowEmptyResultDataAccessExceptionWhenIdDoesNotExists() {
 		Assertions.assertThrows(EmptyResultDataAccessException.class, () -> repository.deleteById(nonExistingId));
