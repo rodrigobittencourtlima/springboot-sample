@@ -4,13 +4,14 @@ import java.time.Instant;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.bittsoftware.dscatalog.services.exceptions.DatabaseException;
-import com.bittsoftware.dscatalog.services.exceptions.ResourceNotFoundException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import com.bittsoftware.dscatalog.services.exceptions.DatabaseException;
+import com.bittsoftware.dscatalog.services.exceptions.ResourceNotFoundException;
 
 @ControllerAdvice
 public class ResourceExceptionHandler {
@@ -36,6 +37,18 @@ public class ResourceExceptionHandler {
 		err.setMessage(exception.getMessage());
 		err.setPath(request.getRequestURI());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<StandardError> validation(MethodArgumentNotValidException exception,
+			HttpServletRequest request) {
+		StandardError err = new StandardError();
+		err.setTimestamp(Instant.now());
+		err.setStatus(HttpStatus.UNPROCESSABLE_ENTITY.value());
+		err.setError("Validation exception");
+		err.setMessage(exception.getMessage());
+		err.setPath(request.getRequestURI());
+		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(err);
 	}
 
 }
