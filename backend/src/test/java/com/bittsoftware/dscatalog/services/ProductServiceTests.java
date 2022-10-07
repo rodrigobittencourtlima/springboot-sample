@@ -73,11 +73,11 @@ public class ProductServiceTests {
 		when(repository.findById(existingId)).thenReturn(Optional.of(product));
 		when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
 
-		when(repository.getReferenceById(existingId)).thenReturn(product);
-		when(repository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
+		when(repository.getOne(existingId)).thenReturn(product);
+		when(repository.getOne(nonExistingId)).thenThrow(EntityNotFoundException.class);
 
-		when(categoryRepository.getReferenceById(existingId)).thenReturn(category);
-		when(categoryRepository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
+		when(categoryRepository.getOne(existingId)).thenReturn(category);
+		when(categoryRepository.getOne(nonExistingId)).thenThrow(EntityNotFoundException.class);
 	}
 
 	@Test
