@@ -1,8 +1,18 @@
 package com.bittsoftware.dscatalog.services;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bittsoftware.dscatalog.dto.CategoryDTO;
 import com.bittsoftware.dscatalog.dto.ProductDTO;
@@ -12,14 +22,6 @@ import com.bittsoftware.dscatalog.repositories.CategoryRepository;
 import com.bittsoftware.dscatalog.repositories.ProductRepository;
 import com.bittsoftware.dscatalog.services.exceptions.DatabaseException;
 import com.bittsoftware.dscatalog.services.exceptions.ResourceNotFoundException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
@@ -32,9 +34,10 @@ public class ProductService {
 
 	@Transactional(readOnly = true)
 	public Page<ProductDTO> findAllPaged(Long categoryId, String name, Pageable pageable) {
-		Category category = (categoryId == 0) ? null : categoryRepository.getReferenceById(categoryId);
-		Page<Product> list = repository.find(category, name, pageable);
-		return list.map(entity -> new ProductDTO(entity));
+		List<Category> categories = (categoryId == 0) ? null : Arrays.asList(categoryRepository.getOne(categoryId));
+		Page<Product> page = repository.find(categories, name, pageable);
+		repository.findProductsWithCategories(page.getContent());
+		return page.map(x -> new ProductDTO(x, x.getCategories()));
 	}
 
 	@Transactional(readOnly = true)
@@ -55,7 +58,7 @@ public class ProductService {
 	@Transactional
 	public ProductDTO update(Long id, ProductDTO dto) {
 		try {
-			Product entity = repository.getReferenceById(id);
+			Product entity = repository.getOne(id);
 			copyDtoToEntity(dto, entity);
 			entity = repository.save(entity);
 			return new ProductDTO(entity);
@@ -72,21 +75,20 @@ public class ProductService {
 		} catch (DataIntegrityViolationException e) {
 			throw new DatabaseException("Integrity violation");
 		}
-
 	}
 
 	private void copyDtoToEntity(ProductDTO dto, Product entity) {
+
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
 		entity.setDate(dto.getDate());
-		entity.setPrice(dto.getPrice());
 		entity.setImgUrl(dto.getImgUrl());
+		entity.setPrice(dto.getPrice());
 
 		entity.getCategories().clear();
-		for (CategoryDTO catDTO : dto.getCategories()) {
-			Category category = categoryRepository.getOne(catDTO.getId());
+		for (CategoryDTO catDto : dto.getCategories()) {
+			Category category = categoryRepository.getOne(catDto.getId());
 			entity.getCategories().add(category);
 		}
 	}
-
 }
