@@ -1,5 +1,6 @@
 package com.bittsoftware.dscatalog.services;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -12,20 +13,10 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
-import com.bittsoftware.dscatalog.dto.ProductDTO;
-import com.bittsoftware.dscatalog.entities.Category;
-import com.bittsoftware.dscatalog.entities.Product;
-import com.bittsoftware.dscatalog.repositories.CategoryRepository;
-import com.bittsoftware.dscatalog.repositories.ProductRepository;
-import com.bittsoftware.dscatalog.services.exceptions.DatabaseException;
-import com.bittsoftware.dscatalog.services.exceptions.ResourceNotFoundException;
-import com.bittsoftware.dscatalog.tests.Factory;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -35,6 +26,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import com.bittsoftware.dscatalog.dto.ProductDTO;
+import com.bittsoftware.dscatalog.entities.Category;
+import com.bittsoftware.dscatalog.entities.Product;
+import com.bittsoftware.dscatalog.repositories.CategoryRepository;
+import com.bittsoftware.dscatalog.repositories.ProductRepository;
+import com.bittsoftware.dscatalog.services.exceptions.DatabaseException;
+import com.bittsoftware.dscatalog.services.exceptions.ResourceNotFoundException;
+import com.bittsoftware.dscatalog.tests.Factory;
 
 @ExtendWith(SpringExtension.class)
 public class ProductServiceTests {
@@ -68,10 +68,12 @@ public class ProductServiceTests {
 		doThrow(EmptyResultDataAccessException.class).when(repository).deleteById(nonExistingId);
 		doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 
-		when(repository.findAll((Pageable) ArgumentMatchers.any())).thenReturn(page);
-		when(repository.save(ArgumentMatchers.any())).thenReturn(product);
+		when(repository.findAll((Pageable) any())).thenReturn(page);
+		when(repository.save(any())).thenReturn(product);
 		when(repository.findById(existingId)).thenReturn(Optional.of(product));
 		when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
+
+		when(repository.find(any(), any(), any())).thenReturn(page);
 
 		when(repository.getOne(existingId)).thenReturn(product);
 		when(repository.getOne(nonExistingId)).thenThrow(EntityNotFoundException.class);
@@ -102,10 +104,9 @@ public class ProductServiceTests {
 	public void findAllPagedShouldReturnPage() {
 		Pageable pageable = PageRequest.of(0, 10);
 
-		Page<ProductDTO> result = service.findAllPaged(pageable);
+		Page<ProductDTO> result = service.findAllPaged(0L, "", pageable);
 
 		Assertions.assertNotNull(result);
-		verify(repository).findAll(pageable);
 	}
 
 	@Test
